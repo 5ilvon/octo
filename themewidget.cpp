@@ -1,7 +1,4 @@
-﻿// Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
-
-#include "themewidget.h"
+﻿#include "themewidget.h"
 #include "ui_themewidget.h"
 
 #include <QtCharts/QChartView>
@@ -29,14 +26,13 @@
 #include <QtWidgets/QApplication>
 #include <QtCharts/QValueAxis>
 
-ThemeWidget::ThemeWidget(QWidget *parent) :
+ThemeWidget::ThemeWidget(QWidget* parent) :
     QWidget(parent),
     m_listCount(3),
     m_valueMax(1000),
     m_valueCount(70),
     m_dataTable(generateRandomData(m_listCount, m_valueMax, m_valueCount)),
-    m_ui(new Ui_ThemeWidgetForm)
-{
+    m_ui(new Ui_ThemeWidgetForm) {
     m_ui->setupUi(this);
     populateThemeBox();
     populateAnimationBox();
@@ -44,7 +40,7 @@ ThemeWidget::ThemeWidget(QWidget *parent) :
 
     //create charts
 
-    QChartView *chartView;
+    QChartView* chartView;
 
     //![5]
     chartView = new QChartView(createLineChart());
@@ -68,13 +64,11 @@ ThemeWidget::ThemeWidget(QWidget *parent) :
     updateUI();
 }
 
-ThemeWidget::~ThemeWidget()
-{
+ThemeWidget::~ThemeWidget() {
     delete m_ui;
 }
 
-DataTable ThemeWidget::generateRandomData(int listCount, int valueMax, int valueCount) const
-{
+DataTable ThemeWidget::generateRandomData(int listCount, int valueMax, int valueCount) const {
     DataTable dataTable;
 
     // generate random data
@@ -94,8 +88,7 @@ DataTable ThemeWidget::generateRandomData(int listCount, int valueMax, int value
     return dataTable;
 }
 
-void ThemeWidget::populateThemeBox()
-{
+void ThemeWidget::populateThemeBox() {
     // add items to theme combobox
     m_ui->themeComboBox->addItem("Light", QChart::ChartThemeLight);
     m_ui->themeComboBox->addItem("Blue Cerulean", QChart::ChartThemeBlueCerulean);
@@ -107,8 +100,7 @@ void ThemeWidget::populateThemeBox()
     m_ui->themeComboBox->addItem("Qt", QChart::ChartThemeQt);
 }
 
-void ThemeWidget::populateAnimationBox()
-{
+void ThemeWidget::populateAnimationBox() {
     // add items to animation combobox
     m_ui->animatedComboBox->addItem("No Animations", QChart::NoAnimation);
     m_ui->animatedComboBox->addItem("GridAxis Animations", QChart::GridAxisAnimations);
@@ -116,8 +108,7 @@ void ThemeWidget::populateAnimationBox()
     m_ui->animatedComboBox->addItem("All Animations", QChart::AllAnimations);
 }
 
-void ThemeWidget::populateLegendBox()
-{
+void ThemeWidget::populateLegendBox() {
     // add items to legend combobox
     m_ui->legendComboBox->addItem("No Legend ", 0);
     m_ui->legendComboBox->addItem("Legend Top", Qt::AlignTop);
@@ -126,16 +117,15 @@ void ThemeWidget::populateLegendBox()
     m_ui->legendComboBox->addItem("Legend Right", Qt::AlignRight);
 }
 
-QChart *ThemeWidget::createBarChart(int valueCount) const
-{
+QChart* ThemeWidget::createBarChart(int valueCount) const {
     Q_UNUSED(valueCount);
-    QChart *chart = new QChart();
+    QChart* chart = new QChart();
     chart->setTitle("Bar chart");
 
-    QStackedBarSeries *series = new QStackedBarSeries(chart);
+    QStackedBarSeries* series = new QStackedBarSeries(chart);
     for (int i(0); i < m_dataTable.count(); i++) {
-        QBarSet *set = new QBarSet("Bar set " + QString::number(i));
-        for (const Data &data : m_dataTable[i])
+        QBarSet* set = new QBarSet("Bar set " + QString::number(i));
+        for (const Data& data : m_dataTable[i])
             *set << data.first.y();
         series->append(set);
     }
@@ -144,26 +134,25 @@ QChart *ThemeWidget::createBarChart(int valueCount) const
     chart->createDefaultAxes();
     chart->axes(Qt::Vertical).first()->setRange(0, m_valueMax * 2);
     // Add space to label to add space between labels and axis
-    QValueAxis *axisY = qobject_cast<QValueAxis*>(chart->axes(Qt::Vertical).first());
+    QValueAxis* axisY = qobject_cast<QValueAxis*>(chart->axes(Qt::Vertical).first());
     Q_ASSERT(axisY);
     axisY->setLabelFormat("%.1f  ");
 
     return chart;
 }
 
-QChart *ThemeWidget::createLineChart() const
-{
+QChart* ThemeWidget::createLineChart() const {
     //![1]
-    QChart *chart = new QChart();
+    QChart* chart = new QChart();
     chart->setTitle("Line chart");
     //![1]
 
     //![2]
     QString name("Series ");
     int nameIndex = 0;
-    for (const DataList &list : m_dataTable) {
-        QLineSeries *series = new QLineSeries(chart);
-        for (const Data &data : list)
+    for (const DataList& list : m_dataTable) {
+        QLineSeries* series = new QLineSeries(chart);
+        for (const Data& data : list)
             series->append(data.first);
         series->setName(name + QString::number(nameIndex));
         nameIndex++;
@@ -178,7 +167,7 @@ QChart *ThemeWidget::createLineChart() const
     //![3]
     //![4]
     // Add space to label to add space between labels and axis
-    QValueAxis *axisY = qobject_cast<QValueAxis*>(chart->axes(Qt::Vertical).first());
+    QValueAxis* axisY = qobject_cast<QValueAxis*>(chart->axes(Qt::Vertical).first());
     Q_ASSERT(axisY);
     axisY->setLabelFormat("%.1f  ");
     //![4]
@@ -186,15 +175,14 @@ QChart *ThemeWidget::createLineChart() const
     return chart;
 }
 
-void ThemeWidget::updateUI()
-{
+void ThemeWidget::updateUI() {
     //![6]
     QChart::ChartTheme theme = static_cast<QChart::ChartTheme>(
-                m_ui->themeComboBox->itemData(m_ui->themeComboBox->currentIndex()).toInt());
+        m_ui->themeComboBox->itemData(m_ui->themeComboBox->currentIndex()).toInt());
     //![6]
     const auto charts = m_charts;
     if (!m_charts.isEmpty() && m_charts.at(0)->chart()->theme() != theme) {
-        for (QChartView *chartView : charts) {
+        for (QChartView* chartView : charts) {
             //![7]
             chartView->chart()->setTheme(theme);
             //![7]
@@ -206,7 +194,7 @@ void ThemeWidget::updateUI()
         if (theme == QChart::ChartThemeLight) {
             pal.setColor(QPalette::Window, QRgb(0xf0f0f0));
             pal.setColor(QPalette::WindowText, QRgb(0x404044));
-        //![8]
+            //![8]
         } else if (theme == QChart::ChartThemeDark) {
             pal.setColor(QPalette::Window, QRgb(0x121218));
             pal.setColor(QPalette::WindowText, QRgb(0xd6d6d6));
@@ -235,16 +223,16 @@ void ThemeWidget::updateUI()
     // Update antialiasing
     //![11]
     bool checked = m_ui->antialiasCheckBox->isChecked();
-    for (QChartView *chart : charts)
+    for (QChartView* chart : charts)
         chart->setRenderHint(QPainter::Antialiasing, checked);
     //![11]
 
     // Update animation options
     //![9]
     QChart::AnimationOptions options(
-                m_ui->animatedComboBox->itemData(m_ui->animatedComboBox->currentIndex()).toInt());
+        m_ui->animatedComboBox->itemData(m_ui->animatedComboBox->currentIndex()).toInt());
     if (!m_charts.isEmpty() && m_charts.at(0)->chart()->animationOptions() != options) {
-        for (QChartView *chartView : charts)
+        for (QChartView* chartView : charts)
             chartView->chart()->setAnimationOptions(options);
     }
     //![9]
@@ -252,17 +240,16 @@ void ThemeWidget::updateUI()
     // Update legend alignment
     //![10]
     Qt::Alignment alignment(
-                m_ui->legendComboBox->itemData(m_ui->legendComboBox->currentIndex()).toInt());
+        m_ui->legendComboBox->itemData(m_ui->legendComboBox->currentIndex()).toInt());
 
     if (!alignment) {
-        for (QChartView *chartView : charts)
+        for (QChartView* chartView : charts)
             chartView->chart()->legend()->hide();
     } else {
-        for (QChartView *chartView : charts) {
+        for (QChartView* chartView : charts) {
             chartView->chart()->legend()->setAlignment(alignment);
             chartView->chart()->legend()->show();
         }
     }
     //![10]
 }
-

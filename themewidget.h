@@ -1,6 +1,3 @@
-// Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
-
 #ifndef THEMEWIDGET_H
 #define THEMEWIDGET_H
 
@@ -24,11 +21,10 @@ typedef QList<DataList> DataTable;
 
 QT_USE_NAMESPACE
 
-class ThemeWidget: public QWidget
-{
+class ThemeWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit ThemeWidget(QWidget *parent = 0);
+    explicit ThemeWidget(QWidget* parent = 0);
     ~ThemeWidget();
 
 private Q_SLOTS:
@@ -40,21 +36,21 @@ private:
     void populateAnimationBox();
     void populateLegendBox();
     void connectSignals();
-    QChart *createAreaChart() const;
-    QChart *createBarChart(int valueCount) const;
-    QChart *createPieChart() const;
-    QChart *createLineChart() const;
-    QChart *createSplineChart() const;
-    QChart *createScatterChart() const;
+    QChart* createAreaChart() const;
+    QChart* createBarChart(int valueCount) const;
+    QChart* createPieChart() const;
+    QChart* createLineChart() const;
+    QChart* createSplineChart() const;
+    QChart* createScatterChart() const;
 
 private:
     int m_listCount;
     int m_valueMax;
     int m_valueCount;
-    QList<QChartView *> m_charts;
+    QList<QChartView*> m_charts;
     DataTable m_dataTable;
 
-    Ui_ThemeWidgetForm *m_ui;
+    Ui_ThemeWidgetForm* m_ui;
 };
 
 #endif /* THEMEWIDGET_H */
