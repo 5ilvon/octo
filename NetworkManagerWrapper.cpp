@@ -1,9 +1,11 @@
 #include "NetworkManagerWrapper.hpp"
 
 #include <QNetworkReply>
+#include <QJsonDocument>
+#include <QJsonArray>
 
 NetworkManagerWrapper::NetworkManagerWrapper() {
-    QNetworkAccessManager* manager = new QNetworkAccessManager(this);
+    auto manager = new QNetworkAccessManager(this);
     connect(manager, &QNetworkAccessManager::finished,
             this, &NetworkManagerWrapper::replyFinished);
 
@@ -13,7 +15,10 @@ NetworkManagerWrapper::NetworkManagerWrapper() {
 
 void NetworkManagerWrapper::replyFinished(QNetworkReply* reply) {
     QByteArray a = reply->readAll();
-    qDebug() << a;
+
+    QJsonDocument loadData(QJsonDocument::fromJson(a));
+    qDebug() << "Requested symbol is:" << loadData["Meta Data"]["2. Symbol"].toString();
+
     reply->deleteLater();
-    exit(0);
+    //exit(0);
 }

@@ -6,15 +6,15 @@
 
 class NetworkManagerWrapper : public QWidget {
     Q_OBJECT
-    public:
+public:
     NetworkManagerWrapper();
-    ~NetworkManagerWrapper() = default;
+    ~NetworkManagerWrapper() override = default;
 
-    private slots:
+private slots:
     //void onGo();
-    void replyFinished(QNetworkReply* reply);
+    static void replyFinished(QNetworkReply* reply);
 
-    private:
+private:
     QNetworkAccessManager m_manager;
 };
 

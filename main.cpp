@@ -6,14 +6,14 @@
 
 int main(int argc, char* argv[]) {
     QApplication a(argc, argv);
-    //QMainWindow window;
-    //ThemeWidget *widget = new ThemeWidget();
-    //window.setCentralWidget(widget);
-    //window.resize(900, 600);
-    //window.show();
+    QMainWindow window;
+    auto widget = new ThemeWidget();
+    window.setCentralWidget(widget);
+    window.resize(1600, 900);
+    window.show();
 
     auto network = new NetworkManagerWrapper();
 
     //return 0;
-    return a.exec();
+    return QApplication::exec();
 }
