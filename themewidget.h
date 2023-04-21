@@ -3,6 +3,9 @@
 
 #include <QtWidgets/QWidget>
 #include <QtCharts/QChartGlobal>
+#include "NetworkManagerWrapper.hpp"
+
+#include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
 class QComboBox;
@@ -24,7 +27,7 @@ QT_USE_NAMESPACE
 class ThemeWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit ThemeWidget(QWidget* parent = 0);
+    explicit ThemeWidget(QWidget* parent = nullptr, NetworkManagerWrapper* netManager = nullptr);
     ~ThemeWidget();
 
 private Q_SLOTS:
@@ -39,6 +42,8 @@ private:
     QChart* createBarChart(int valueCount) const;
     QChart* createLineChart() const;
 
+    void setupSimpleDemo(QCustomPlot* customPlot);
+
 private:
     int m_listCount;
     int m_valueMax;
@@ -46,6 +51,7 @@ private:
     QList<QChartView*> m_charts;
     DataTable m_dataTable;
 
+    NetworkManagerWrapper* m_netManager;
     Ui_ThemeWidgetForm* m_ui;
 };
 

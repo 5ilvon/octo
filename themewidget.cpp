@@ -1,38 +1,28 @@
 ﻿#include "themewidget.h"
 #include "ui_themewidget.h"
+#include "NetworkManagerWrapper.hpp"
 
 #include <QtCharts/QChartView>
-#include <QtCharts/QPieSeries>
-#include <QtCharts/QPieSlice>
-#include <QtCharts/QAbstractBarSeries>
-#include <QtCharts/QPercentBarSeries>
 #include <QtCharts/QStackedBarSeries>
-#include <QtCharts/QBarSeries>
 #include <QtCharts/QBarSet>
 #include <QtCharts/QLineSeries>
-#include <QtCharts/QSplineSeries>
-#include <QtCharts/QScatterSeries>
 #include <QtCharts/QAreaSeries>
-#include <QtCharts/QLegend>
 #include <QtWidgets/QGridLayout>
-#include <QtWidgets/QFormLayout>
-#include <QtWidgets/QComboBox>
-#include <QtWidgets/QSpinBox>
-#include <QtWidgets/QCheckBox>
 #include <QtWidgets/QGroupBox>
-#include <QtWidgets/QLabel>
 #include <QtCore/QRandomGenerator>
-#include <QtCharts/QBarCategoryAxis>
 #include <QtWidgets/QApplication>
 #include <QtCharts/QValueAxis>
 
-ThemeWidget::ThemeWidget(QWidget* parent) :
+#include "qcustomplot.h"
+
+ThemeWidget::ThemeWidget(QWidget* parent, NetworkManagerWrapper* netManager) :
     QWidget(parent),
     m_listCount(3),
     m_valueMax(1000),
     m_valueCount(70),
     m_dataTable(generateRandomData(m_listCount, m_valueMax, m_valueCount)),
-    m_ui(new Ui_ThemeWidgetForm) {
+    m_ui(new Ui_ThemeWidgetForm),
+    m_netManager(netManager) {
     m_ui->setupUi(this);
     populateThemeBox();
     populateAnimationBox();
@@ -42,15 +32,21 @@ ThemeWidget::ThemeWidget(QWidget* parent) :
 
     QChartView* chartView;
 
-    //![5]
-    chartView = new QChartView(createLineChart());
-    m_ui->gridLayout->addWidget(chartView, 1, 0);
-    //![5]
-    m_charts << chartView;
+    //    //![5]
+    //    chartView = new QChartView(createLineChart());
+    //    m_ui->gridLayout->addWidget(chartView, 1, 0);
+    //    //![5]
+    //    m_charts << chartView;
+    //
+    //    chartView = new QChartView(createBarChart(m_valueCount));
+    //    m_ui->gridLayout->addWidget(chartView, 2, 0);
+    //    m_charts << chartView;
 
-    chartView = new QChartView(createBarChart(m_valueCount));
-    m_ui->gridLayout->addWidget(chartView, 2, 0);
-    m_charts << chartView;
+    auto* customPlot = new QCustomPlot;
+    setupSimpleDemo(customPlot);
+    m_ui->gridLayout->addWidget(customPlot, 1, 0, 1, 3);
+
+    customPlot->setBackground(QColor(0, 0, 255, 20)); // test for change background color
 
     // Set defaults
     m_ui->antialiasCheckBox->setChecked(true);
@@ -117,9 +113,47 @@ void ThemeWidget::populateLegendBox() {
     m_ui->legendComboBox->addItem("Legend Right", Qt::AlignRight);
 }
 
+void ThemeWidget::setupSimpleDemo(QCustomPlot* customPlot) {
+    // add two new graphs and set their look:
+    customPlot->addGraph();
+    customPlot->graph(0)->setPen(QPen(Qt::blue));                  // line color blue for first graph
+    customPlot->graph(0)->setBrush(QBrush(QColor(0, 0, 255, 20))); // first graph will be filled with translucent blue
+    customPlot->graph(0)->setAdaptiveSampling(true);
+    customPlot->addGraph();
+    customPlot->graph(1)->setPen(QPen(Qt::red)); // line color red for second graph
+    customPlot->graph(1)->setAdaptiveSampling(true);
+    // generate some points of data (y0 for first, y1 for second graph):
+    QVector<double> x(10001), y0(10001), y1(10001);
+    for (int i = 0; i < 10001; ++i) {
+        x[i] = i;
+        y0[i] = qExp(-i / 200.0) * qCos(i / 15); // exponentially decaying cosine
+        y1[i] = qExp(-i / 200.0);                // exponential envelope
+    }
+    // configure right and top axis to show ticks but no labels:
+    // (see QCPAxisRect::setupFullAxesBox for a quicker method to do this)
+    customPlot->xAxis2->setVisible(true);
+    customPlot->xAxis2->setTickLabels(false);
+    customPlot->yAxis2->setVisible(true);
+    customPlot->yAxis2->setTickLabels(false);
+    customPlot->background().fill(QRgb(0x40434a));
+    // make left and bottom axes always transfer their ranges to right and top axes:
+    connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis2, SLOT(setRange(QCPRange)));
+    connect(customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), customPlot->yAxis2, SLOT(setRange(QCPRange)));
+    // pass data points to graphs:
+    customPlot->graph(0)->setData(x, y0);
+    customPlot->graph(1)->setData(x, y1);
+    // let the ranges scale themselves so graph 0 fits perfectly in the visible area:
+    customPlot->graph(0)->rescaleAxes();
+    // same thing for graph 1, but only enlarge ranges (in case graph 1 is smaller than graph 0):
+    customPlot->graph(1)->rescaleAxes(true);
+    // Note: we could have also just called customPlot->rescaleAxes(); instead
+    // Allow user to drag axis ranges with mouse, zoom with mouse wheel and select graphs by clicking:
+    customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+}
+
 QChart* ThemeWidget::createBarChart(int valueCount) const {
     Q_UNUSED(valueCount);
-    QChart* chart = new QChart();
+    auto chart = new QChart();
     chart->setTitle("Bar chart");
 
     QStackedBarSeries* series = new QStackedBarSeries(chart);
@@ -143,7 +177,7 @@ QChart* ThemeWidget::createBarChart(int valueCount) const {
 
 QChart* ThemeWidget::createLineChart() const {
     //![1]
-    QChart* chart = new QChart();
+    auto chart = new QChart();
     chart->setTitle("Line chart");
     //![1]
 
@@ -151,7 +185,7 @@ QChart* ThemeWidget::createLineChart() const {
     QString name("Series ");
     int nameIndex = 0;
     for (const DataList& list : m_dataTable) {
-        QLineSeries* series = new QLineSeries(chart);
+        auto series = new QLineSeries(chart);
         for (const Data& data : list)
             series->append(data.first);
         series->setName(name + QString::number(nameIndex));
@@ -187,38 +221,39 @@ void ThemeWidget::updateUI() {
             chartView->chart()->setTheme(theme);
             //![7]
         }
-
-        // Set palette colors based on selected theme
-        //![8]
-        QPalette pal = window()->palette();
-        if (theme == QChart::ChartThemeLight) {
-            pal.setColor(QPalette::Window, QRgb(0xf0f0f0));
-            pal.setColor(QPalette::WindowText, QRgb(0x404044));
-            //![8]
-        } else if (theme == QChart::ChartThemeDark) {
-            pal.setColor(QPalette::Window, QRgb(0x121218));
-            pal.setColor(QPalette::WindowText, QRgb(0xd6d6d6));
-        } else if (theme == QChart::ChartThemeBlueCerulean) {
-            pal.setColor(QPalette::Window, QRgb(0x40434a));
-            pal.setColor(QPalette::WindowText, QRgb(0xd6d6d6));
-        } else if (theme == QChart::ChartThemeBrownSand) {
-            pal.setColor(QPalette::Window, QRgb(0x9e8965));
-            pal.setColor(QPalette::WindowText, QRgb(0x404044));
-        } else if (theme == QChart::ChartThemeBlueNcs) {
-            pal.setColor(QPalette::Window, QRgb(0x018bba));
-            pal.setColor(QPalette::WindowText, QRgb(0x404044));
-        } else if (theme == QChart::ChartThemeHighContrast) {
-            pal.setColor(QPalette::Window, QRgb(0xffab03));
-            pal.setColor(QPalette::WindowText, QRgb(0x181818));
-        } else if (theme == QChart::ChartThemeBlueIcy) {
-            pal.setColor(QPalette::Window, QRgb(0xcee7f0));
-            pal.setColor(QPalette::WindowText, QRgb(0x404044));
-        } else {
-            pal.setColor(QPalette::Window, QRgb(0xf0f0f0));
-            pal.setColor(QPalette::WindowText, QRgb(0x404044));
-        }
-        window()->setPalette(pal);
     }
+
+    // Set palette colors based on selected theme
+    //![8]
+    QPalette pal = window()->palette();
+    if (theme == QChart::ChartThemeLight) {
+        pal.setColor(QPalette::Window, QRgb(0xf0f0f0));
+        pal.setColor(QPalette::WindowText, QRgb(0x404044));
+        //![8]
+    } else if (theme == QChart::ChartThemeDark) {
+        pal.setColor(QPalette::Window, QRgb(0x121218));
+        pal.setColor(QPalette::WindowText, QRgb(0xd6d6d6));
+    } else if (theme == QChart::ChartThemeBlueCerulean) {
+        pal.setColor(QPalette::Window, QRgb(0x40434a));
+        pal.setColor(QPalette::WindowText, QRgb(0xd6d6d6));
+    } else if (theme == QChart::ChartThemeBrownSand) {
+        pal.setColor(QPalette::Window, QRgb(0x9e8965));
+        pal.setColor(QPalette::WindowText, QRgb(0x404044));
+    } else if (theme == QChart::ChartThemeBlueNcs) {
+        pal.setColor(QPalette::Window, QRgb(0x018bba));
+        pal.setColor(QPalette::WindowText, QRgb(0x404044));
+    } else if (theme == QChart::ChartThemeHighContrast) {
+        pal.setColor(QPalette::Window, QRgb(0xffab03));
+        pal.setColor(QPalette::WindowText, QRgb(0x181818));
+    } else if (theme == QChart::ChartThemeBlueIcy) {
+        pal.setColor(QPalette::Window, QRgb(0xcee7f0));
+        pal.setColor(QPalette::WindowText, QRgb(0x404044));
+    } else {
+        pal.setColor(QPalette::Window, QRgb(0xf0f0f0));
+        pal.setColor(QPalette::WindowText, QRgb(0x404044));
+    }
+    window()->setPalette(pal);
+
 
     // Update antialiasing
     //![11]

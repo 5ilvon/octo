@@ -3,16 +3,23 @@
 
 #include <QWidget>
 #include <QNetworkAccessManager>
+#include <QList>
+#include <QJsonValue>
+
+struct OHLCData {
+    QList<QDateTime> timeSeq;
+};
 
 class NetworkManagerWrapper : public QWidget {
     Q_OBJECT
 public:
     NetworkManagerWrapper();
     ~NetworkManagerWrapper() override = default;
+    QPair<QDateTime, QJsonValue> m_array;
 
 private slots:
     //void onGo();
-    static void replyFinished(QNetworkReply* reply);
+    void replyFinished(QNetworkReply* reply);
 
 private:
     QNetworkAccessManager m_manager;
