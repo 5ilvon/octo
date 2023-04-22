@@ -5,17 +5,20 @@
 #include <QNetworkAccessManager>
 #include <QList>
 #include <QJsonValue>
+#include <QThread>
 
 struct OHLCData {
-    QList<QDateTime> timeSeq;
+    QVector<double> timeKeys, open, high, low, close, volume;
 };
 
-class NetworkManagerWrapper : public QWidget {
+class NetworkManagerWrapper : public QObject {
     Q_OBJECT
 public:
-    NetworkManagerWrapper();
-    ~NetworkManagerWrapper() override = default;
-    QPair<QDateTime, QJsonValue> m_array;
+    NetworkManagerWrapper() = default;
+    ~NetworkManagerWrapper() = default;
+
+    void Start();
+    OHLCData dataArray;
 
 private slots:
     //void onGo();
@@ -23,6 +26,9 @@ private slots:
 
 private:
     QNetworkAccessManager m_manager;
+
+signals:
+    void resultReady(const OHLCData& result);
 };
 
 #endif //NETWORKMANAGERWRAPPER_H
