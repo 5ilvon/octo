@@ -3,54 +3,42 @@
 
 #include <QtWidgets/QWidget>
 #include <QtCharts/QChartGlobal>
+#include "NetworkManagerWrapper.hpp"
+
+#include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
-class QComboBox;
-class QCheckBox;
 class Ui_ThemeWidgetForm;
 QT_END_NAMESPACE
 
 QT_BEGIN_NAMESPACE
-class QChartView;
 class QChart;
 QT_END_NAMESPACE
 
-typedef QPair<QPointF, QString> Data;
-typedef QList<Data> DataList;
-typedef QList<DataList> DataTable;
-
 QT_USE_NAMESPACE
+
+struct OHLCData;
 
 class ThemeWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit ThemeWidget(QWidget* parent = 0);
+    explicit ThemeWidget(QWidget* parent = nullptr);
     ~ThemeWidget();
 
 private Q_SLOTS:
     void updateUI();
 
 private:
-    DataTable generateRandomData(int listCount, int valueMax, int valueCount) const;
     void populateThemeBox();
-    void populateAnimationBox();
-    void populateLegendBox();
-    void connectSignals();
-    QChart* createAreaChart() const;
-    QChart* createBarChart(int valueCount) const;
-    QChart* createPieChart() const;
-    QChart* createLineChart() const;
-    QChart* createSplineChart() const;
-    QChart* createScatterChart() const;
+    void setupSimpleDemo(QCustomPlot* customPlot, const OHLCData& data);
 
 private:
-    int m_listCount;
-    int m_valueMax;
-    int m_valueCount;
-    QList<QChartView*> m_charts;
-    DataTable m_dataTable;
-
+    QCustomPlot* m_plot;
+    NetworkManagerWrapper* m_net;
     Ui_ThemeWidgetForm* m_ui;
+
+public slots:
+    void handleResults(const OHLCData&);
 };
 
 #endif /* THEMEWIDGET_H */

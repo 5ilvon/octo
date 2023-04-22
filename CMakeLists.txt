@@ -1,37 +1,47 @@
 cmake_minimum_required(VERSION 3.16)
-project(chartthemes LANGUAGES CXX)
+project(octo LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
-if(NOT DEFINED INSTALL_EXAMPLESDIR)
-    set(INSTALL_EXAMPLESDIR "examples")
-endif()
-
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/charts/chartthemes")
+# Find architecture property
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(PROJECT_ARCH_TARGET "amd64")    # x64
+elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(PROJECT_ARCH_TARGET "i386")     # x86
+else ()
+    message(FATAL_ERROR "Unknown architecture, CMake will exit.")
+endif ()
 
 find_package(Qt6 REQUIRED COMPONENTS Charts Core Gui Network)
 
-qt_add_executable(chartthemes
-    main.cpp
-    NetworkManagerWrapper.cpp NetworkManagerWrapper.hpp
-    themewidget.cpp themewidget.h themewidget.ui
-)
+add_subdirectory(QCustomPlot)
 
-set_target_properties(chartthemes PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
+include_directories(QCustomPlot)
 
-target_link_libraries(chartthemes PUBLIC
-    Qt::Charts
-    Qt::Core
-    Qt::Gui
-    Qt::Network
-)
+qt_add_executable(octo
+        main.cpp
+        NetworkManagerWrapper.cpp NetworkManagerWrapper.hpp
+        themewidget.cpp themewidget.h themewidget.ui
+        )
 
-install(TARGETS chartthemes
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
-)
+set_target_properties(octo PROPERTIES
+        WIN32_EXECUTABLE TRUE
+        MACOSX_BUNDLE TRUE
+        )
+
+target_link_libraries(octo PUBLIC
+        Qt::Charts
+        Qt::Core
+        Qt::Gui
+        Qt::Network
+        qcustomplot
+        )
+
+install(TARGETS octo
+        RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
+        BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
+        LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+        )
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE QCUSTOMPLOT_USE_LIBRARY)
