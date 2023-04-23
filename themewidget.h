@@ -39,6 +39,9 @@ private:
 
 public slots:
     void handleResults(const OHLCData&);
+
+    void mouseWheel();
+    void mousePress();
 };
 
 #endif /* THEMEWIDGET_H */
