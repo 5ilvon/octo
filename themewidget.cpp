@@ -65,12 +65,12 @@ void ThemeWidget::setupSimpleDemo(QCustomPlot* customPlot, const OHLCData& data)
     candlesticks->setName("Candlestick");
     candlesticks->setChartStyle(QCPFinancial::csCandlestick);
     candlesticks->addData(data.timeKeys, data.open, data.high, data.low, data.close, true);
-    candlesticks->setWidth(binSize * 1);
+    candlesticks->setWidth(binSize * 0.8);
     candlesticks->setTwoColored(true);
-    candlesticks->setBrushPositive(QColor(245, 245, 245));
-    candlesticks->setBrushNegative(QColor(40, 40, 40));
-    candlesticks->setPenPositive(QPen(QColor(0, 0, 0)));
-    candlesticks->setPenNegative(QPen(QColor(0, 0, 0)));
+    candlesticks->setBrushPositive(QColor(8, 153, 129));
+    candlesticks->setBrushNegative(QColor(242, 54, 69));
+    candlesticks->setPenPositive(QPen(QColor(0, 0, 0, 0)));
+    candlesticks->setPenNegative(QPen(QColor(0, 0, 0, 0)));
 
     // create ohlc chart:
     auto ohlc = new QCPFinancial(customPlot->xAxis, customPlot->yAxis);
@@ -87,24 +87,24 @@ void ThemeWidget::setupSimpleDemo(QCustomPlot* customPlot, const OHLCData& data)
     volumeAxisRect->axis(QCPAxis::atBottom)->setLayer("axes");
     volumeAxisRect->axis(QCPAxis::atBottom)->grid()->setLayer("grid");
     // bring bottom and main axis rect closer together:
-    customPlot->plotLayout()->setRowSpacing(-20);
+    customPlot->plotLayout()->setRowSpacing(-10);
     volumeAxisRect->setAutoMargins(QCP::msLeft | QCP::msRight | QCP::msBottom);
     volumeAxisRect->setMargins(QMargins(0, 0, 0, 0));
-    // create two bar plotables, for positive (green) and negative (red) volume bars:
+    // create two bar, for positive (green) and negative (red) volume bars:
     customPlot->setAutoAddPlottableToLegend(false);
     auto volumePos = new QCPBars(volumeAxisRect->axis(QCPAxis::atBottom), volumeAxisRect->axis(QCPAxis::atLeft));
     auto volumeNeg = new QCPBars(volumeAxisRect->axis(QCPAxis::atBottom), volumeAxisRect->axis(QCPAxis::atLeft));
-    for (int i = 0; i < data.volume.size() - 1; ++i) {
-        (data.close[i + 1] < data.close[i] ? volumeNeg : volumePos)->addData(data.timeKeys[i], qAbs(data.volume[i])); // add data to either volumeNeg or volumePos, depending on sign of v
+    for (int i = 1; i < data.volume.size(); ++i) {
+        (data.close[i] < data.close[i - 1] ? volumeNeg : volumePos)->addData(data.timeKeys[i], qAbs(data.volume[i])); // add data to either volumeNeg or volumePos, depending on sign of v
     }
-    volumePos->setWidth(60);
+    volumePos->setWidth(58);
     volumePos->setPen(Qt::NoPen);
-    volumePos->setBrush(QColor(100, 180, 110));
-    volumeNeg->setWidth(60);
+    volumePos->setBrush(QColor(8, 153, 129, 127));
+    volumeNeg->setWidth(58);
     volumeNeg->setPen(Qt::NoPen);
-    volumeNeg->setBrush(QColor(180, 90, 90));
+    volumeNeg->setBrush(QColor(242, 54, 69, 127));
 
-    //interconnect x - axis ranges of main and bottom axis rects
+    //interconnect x-axis ranges of main and bottom axis rects
     connect(customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), volumeAxisRect->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
     connect(volumeAxisRect->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), customPlot->xAxis, SLOT(setRange(QCPRange)));
     //configure axes of both main and bottom axis rect
@@ -112,7 +112,7 @@ void ThemeWidget::setupSimpleDemo(QCustomPlot* customPlot, const OHLCData& data)
     dateTimeTicker->setDateTimeSpec(Qt::UTC);
     dateTimeTicker->setDateTimeFormat("dd. MMMM\nHH:mm");
     volumeAxisRect->axis(QCPAxis::atBottom)->setTicker(dateTimeTicker);
-    volumeAxisRect->axis(QCPAxis::atBottom)->setTickLabelRotation(15);
+    //volumeAxisRect->axis(QCPAxis::atBottom)->setTickLabelRotation(15);
     customPlot->xAxis->setBasePen(Qt::NoPen);
     customPlot->xAxis->setTickLabels(false);
     customPlot->xAxis->setTicks(false); // only want vertical grid in main axis rect, so hide xAxis backbone, ticks, and labels
@@ -127,6 +127,13 @@ void ThemeWidget::setupSimpleDemo(QCustomPlot* customPlot, const OHLCData& data)
     volumeAxisRect->setMarginGroup(QCP::msLeft | QCP::msRight, group);
 
     customPlot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+    volumeAxisRect->setRangeDrag(Qt::Horizontal); // disable free drag for volume plot
+    volumeAxisRect->setRangeZoom(Qt::Horizontal); // disable vertical zoom vor volume plot
+
+    connect(customPlot, SIGNAL(mousePress(QMouseEvent*)), this, SLOT(mousePress()));
+    connect(customPlot, SIGNAL(mouseWheel(QWheelEvent*)), this, SLOT(mouseWheel()));
+
+    customPlot->replot(); // replot after get data and initial setup
 }
 
 void ThemeWidget::updateUI() {
@@ -158,4 +165,12 @@ void ThemeWidget::updateUI() {
         pal.setColor(QPalette::WindowText, QRgb(0x404044));
     }
     window()->setPalette(pal);
+}
+
+void ThemeWidget::mousePress() {
+    // TODO: auto rescale plot when mouse wheel or press button
+}
+
+void ThemeWidget::mouseWheel() {
+    // TODO: auto rescale plot when mouse wheel or press button
 }

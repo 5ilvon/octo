@@ -12,28 +12,24 @@ void NetworkManagerWrapper::Start() {
             this, &NetworkManagerWrapper::replyFinished);
 
     qDebug() << "API Requesting";
-    manager->get(QNetworkRequest(QUrl("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=MSFT&interval=1min&apikey=CSZYXE21FDZF1B1B")));
+    manager->get(QNetworkRequest(QUrl("https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/minute/2023-04-20/2023-04-20?adjusted=true&sort=asc&limit=5000&apiKey=0vT2L9jHNnSfaQtaksA_KV51ijYg5Tun")));
 }
 
 void NetworkManagerWrapper::replyFinished(QNetworkReply* reply) {
     QByteArray receivedData = reply->readAll();
 
     auto data = QJsonDocument::fromJson(receivedData);
-    if (!data["Meta Data"].isUndefined()) {
-        qDebug() << "Received data for symbol is:" << data["Meta Data"]["2. Symbol"].toString();
 
-        auto timeSequence = data["Time Series (1min)"].toObject();
+    if (!data["results"].toArray().isEmpty()) {
+        qDebug() << "Received data for symbol is:" << data["ticker"].toString();
 
-        // fill vector for timeKeys in seconds from UTC format
-        for (const auto& key : timeSequence.keys())
-            dataArray.timeKeys.append(QDateTime::fromString(key, Qt::ISODateWithMs).toSecsSinceEpoch());
-
-        for (const auto& timeEntry : timeSequence) {
-            dataArray.open.append(timeEntry.toObject()["1. open"].toString().toDouble());
-            dataArray.high.append(timeEntry.toObject()["2. high"].toString().toDouble());
-            dataArray.low.append(timeEntry.toObject()["3. low"].toString().toDouble());
-            dataArray.close.append(timeEntry.toObject()["4. close"].toString().toDouble());
-            dataArray.volume.append(timeEntry.toObject()["5. volume"].toString().toDouble());
+        for (const auto& timeEntry : data["results"].toArray()) {
+            dataArray.timeKeys.append(timeEntry.toObject()["t"].toDouble() / 1000); // from milliseconds to seconds
+            dataArray.open.append(timeEntry.toObject()["o"].toDouble());
+            dataArray.high.append(timeEntry.toObject()["h"].toDouble());
+            dataArray.low.append(timeEntry.toObject()["l"].toDouble());
+            dataArray.close.append(timeEntry.toObject()["c"].toDouble());
+            dataArray.volume.append(timeEntry.toObject()["v"].toDouble());
         }
         emit resultReady(dataArray);
     }
