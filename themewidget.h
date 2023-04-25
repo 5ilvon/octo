@@ -33,7 +33,6 @@ private:
     void setupSimpleDemo(QCustomPlot* customPlot, const OHLCData& data);
 
 private:
-    QCustomPlot* m_plot;
     NetworkManagerWrapper* m_net;
     Ui_ThemeWidgetForm* m_ui;
 

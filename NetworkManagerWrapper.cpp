@@ -12,7 +12,8 @@ void NetworkManagerWrapper::Start() {
             this, &NetworkManagerWrapper::replyFinished);
 
     qDebug() << "API Requesting";
-    manager->get(QNetworkRequest(QUrl("https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/minute/2023-04-20/2023-04-20?adjusted=true&sort=asc&limit=5000&apiKey=0vT2L9jHNnSfaQtaksA_KV51ijYg5Tun")));
+    // 1 hour scale breaks
+    manager->get(QNetworkRequest(QUrl("https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/hour/2023-01-01/2023-04-25?adjusted=true&sort=asc&limit=5000&apiKey=0vT2L9jHNnSfaQtaksA_KV51ijYg5Tun")));
 }
 
 void NetworkManagerWrapper::replyFinished(QNetworkReply* reply) {
@@ -31,6 +32,7 @@ void NetworkManagerWrapper::replyFinished(QNetworkReply* reply) {
             dataArray.close.append(timeEntry.toObject()["c"].toDouble());
             dataArray.volume.append(timeEntry.toObject()["v"].toDouble());
         }
+        qDebug() << "values number:" << dataArray.close.size();
         emit resultReady(dataArray);
     }
 
