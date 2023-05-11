@@ -36,11 +36,19 @@ private:
     NetworkManagerWrapper* m_net;
     Ui_ThemeWidgetForm* m_ui;
 
+    double cursorXPos, cursorYPos;
+    QCPFinancial* candlesticksPlot;
+    QCPFinancial* ohlcPlot;
+    QCPItemTracer* cursorCross;
+
+    bool isSetuped = false;
+
 public slots:
     void handleResults(const OHLCData&);
 
     void mouseWheel();
     void mousePress();
+    void mouseMove(QMouseEvent* ev);
 };
 
 #endif /* THEMEWIDGET_H */

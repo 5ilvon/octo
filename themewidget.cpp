@@ -25,7 +25,6 @@ ThemeWidget::ThemeWidget(QWidget* parent) :
     m_net->Start();
 
     m_ui->widget->setVisible(false); // hide right sideframe
-                                     //m_ui->widget->
 
     connect(m_net, &NetworkManagerWrapper::resultReady, this, &ThemeWidget::handleResults);
 
@@ -45,7 +44,10 @@ ThemeWidget::ThemeWidget(QWidget* parent) :
 }
 
 void ThemeWidget::handleResults(const OHLCData& data) {
-    setupSimpleDemo(m_ui->qcpWidget, data);
+    if (!isSetuped) setupSimpleDemo(m_ui->qcpWidget, data);
+    candlesticksPlot->addData(data.timeKeys, data.open, data.high, data.low, data.close, true);
+    ohlcPlot->addData(data.timeKeys, data.open, data.high, data.low, data.close, true);
+    m_ui->qcpWidget->rescaleAxes();
 }
 
 ThemeWidget::~ThemeWidget() {
@@ -66,13 +68,15 @@ void ThemeWidget::populateThemeBox() {
 
 // TODO: Make wrapper for qcustomplot with support autoscaling, crosshair cursor and etc.
 void ThemeWidget::setupSimpleDemo(QCustomPlot* customPlot, const OHLCData& data) {
-    double binSize = 3600; // bin data in 1 minute intervals
+    isSetuped = true;
+    //double binSize = 3600; // bin data in 1 hour intervals
+    double binSize = 300;
 
     // create candlestick chart:
     auto candlesticks = new QCPFinancial(customPlot->xAxis, customPlot->yAxis);
+    candlesticksPlot = candlesticks;
     candlesticks->setName("Candlestick");
     candlesticks->setChartStyle(QCPFinancial::csCandlestick);
-    candlesticks->addData(data.timeKeys, data.open, data.high, data.low, data.close, true);
     candlesticks->setWidth(binSize * 0.8);
     candlesticks->setTwoColored(true);
     candlesticks->setBrushPositive(QColor(8, 153, 129));
@@ -82,9 +86,9 @@ void ThemeWidget::setupSimpleDemo(QCustomPlot* customPlot, const OHLCData& data)
 
     // create ohlc chart:
     auto ohlc = new QCPFinancial(customPlot->xAxis, customPlot->yAxis);
+    ohlcPlot = ohlc;
     ohlc->setName("OHLC");
     ohlc->setChartStyle(QCPFinancial::csOhlc);
-    ohlc->addData(data.timeKeys, data.open, data.high, data.low, data.close, true);
     ohlc->setWidth(0); // for candlesticks view force to zero width of ohlc bars -> remove horizontal aliasing lines
     ohlc->setTwoColored(true);
     ohlc->setPenPositive(QPen(QColor(8, 153, 129)));
@@ -147,12 +151,12 @@ void ThemeWidget::setupSimpleDemo(QCustomPlot* customPlot, const OHLCData& data)
 
     connect(customPlot, SIGNAL(mousePress(QMouseEvent*)), this, SLOT(mousePress()));
     connect(customPlot, SIGNAL(mouseWheel(QWheelEvent*)), this, SLOT(mouseWheel()));
+    connect(customPlot, SIGNAL(mouseMove(QMouseEvent*)), this, SLOT(mouseMove(QMouseEvent*)));
 
     // Test crosshair binned to x-values
-    auto t = new QCPItemTracer(customPlot);
-    t->setGraph(reinterpret_cast<QCPGraph*>(candlesticks));
-    t->setGraphKey(data.timeKeys[0]);
-    t->setStyle(QCPItemTracer::tsCrosshair);
+    cursorCross = new QCPItemTracer(customPlot);
+    cursorCross->setGraph(reinterpret_cast<QCPGraph*>(candlesticksPlot));
+    cursorCross->setStyle(QCPItemTracer::tsCrosshair);
     //t->setPen(QPen(Qt::red));
     //t->setBrush(Qt::red);
 
@@ -195,5 +199,16 @@ void ThemeWidget::mousePress() {
 }
 
 void ThemeWidget::mouseWheel() {
+    // TODO: auto rescale plot when mouse wheel or press button
+}
+
+void ThemeWidget::mouseMove(QMouseEvent* ev) {
+    cursorXPos = m_ui->qcpWidget->xAxis->pixelToCoord(ev->pos().x());
+    cursorYPos = m_ui->qcpWidget->yAxis->pixelToCoord(ev->pos().y());
+    cursorCross->setGraphKey(cursorXPos);
+
+    m_ui->qcpWidget->replot();
+
+    qDebug() << "MOVING" << cursorXPos << " " << cursorYPos;
     // TODO: auto rescale plot when mouse wheel or press button
 }

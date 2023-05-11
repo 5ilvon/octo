@@ -21,11 +21,11 @@ public:
     OHLCData dataArray;
 
 private slots:
-    //void onGo();
+    void requestData(const QString&);
     void replyFinished(QNetworkReply* reply);
 
 private:
-    QNetworkAccessManager m_manager;
+    QNetworkAccessManager* m_manager;
 
 signals:
     void resultReady(const OHLCData& result);
